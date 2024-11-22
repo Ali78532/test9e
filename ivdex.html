@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #a0e7f7, #ffccf2);
+            background-attachment: fixed;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .choices {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin: 20px 0;
+            padding: 0 10px;
+        }
+        .choice {
+            background: #ff88cc;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .choice:hover {
+            background: #ff5599;
+            transform: scale(1.1);
+        }
+        .question-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            margin: 10px auto;
+            padding: 15px;
+            text-align: left;
+            font-size: 18px;
+            line-height: 1.5;
+            position: relative;
+        }
+        .blank {
+            display: inline-block;
+            vertical-align: baseline;
+            width: 100px;
+            height: 20px;
+            line-height: normal;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px dashed #ff88cc;
+            font-size: 16px;
+            color: #333;
+        }
+        .filled {
+            border-radius: 50px;
+            background: #ff88cc;
+            color: white;
+        }
+        .result-button {
+            display: none;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        .result-button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 15px;
+            font-size: 35px;
+            font-weight: bold;
+            color: #333;
+        }
+        .correct-answer, .user-correct {
+            font-size: 16px;
+            margin-top: 10px;
+            text-align: right;
+            direction: rtl;
+        }
+        .correct-answer {
+            color: red;
+        }
+        .user-correct {
+            color: green;
+        }
+        .filled.correct {
+            background-color: green !important;
+            cursor: default !important;
+        }
+        .filled.incorrect {
+            background-color: red !important;
+            cursor: default !important;
+        }
+        .footer {
+            margin-top: 30px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #555;
+            text-align: center;
+            white-space: nowrap;
+        }
+    </style>
+    <script>
+        const correctAnswers = ["bite", "produce", "falcon", "crops", "fly"];
+        let resultsDisplayed = false;
+
+        // Function to shuffle an array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Function to shuffle the choices on page load
+        function shuffleChoices() {
+            const choices = document.querySelector('.choices');
+            const choiceElements = Array.from(choices.children);
+            shuffleArray(choiceElements);
+            choiceElements.forEach(choice => choices.appendChild(choice));
+        }
+
+        // Call shuffleChoices when the page loads
+        window.onload = shuffleChoices;
+
+        function fillBlank(word, element) {
+            if (resultsDisplayed) return;
+            const blanks = document.querySelectorAll('.blank');
+            for (let blank of blanks) {
+                if (blank.textContent.trim() === '') {
+                    blank.textContent = word;
+                    blank.classList.add('filled');
+                    blank.onclick = () => removeWord(blank, element);
+                    checkCompletion();
+                    break;
+                }
+            }
+        }
+
+        function removeWord(blank, originalElement) {
+            if (resultsDisplayed) return;
+            blank.textContent = '';
+            blank.classList.remove('filled');
+            checkCompletion();
+        }
+
+        function checkCompletion() {
+            const blanks = document.querySelectorAll('.blank');
+            const allFilled = Array.from(blanks).every(blank => blank.textContent.trim() !== '');
+            const resultButton = document.getElementById('result-button');
+            if (allFilled) {
+                resultButton.style.display = 'block';
+            } else {
+                resultButton.style.display = 'none';
+            }
+        }
+
+        function showResult() {
+            resultsDisplayed = true;
+            const blanks = document.querySelectorAll('.blank');
+            const questions = document.querySelectorAll('.question-container');
+            let score = 0;
+
+            blanks.forEach((blank, index) => {
+                const correctAnswer = correctAnswers[index];
+                if (blank.textContent === correctAnswer) {
+                    blank.classList.add('correct');
+                    score += 2;
+
+                    const userCorrect = document.createElement('div');
+                    userCorrect.classList.add('user-correct');
+                    userCorrect.textContent = 'إجابتك صحيحة';
+                    questions[index].appendChild(userCorrect);
+                } else {
+                    blank.classList.add('incorrect');
+
+                    const correctAnswerDiv = document.createElement('div');
+                    correctAnswerDiv.classList.add('correct-answer');
+                    correctAnswerDiv.textContent = `الإجابة الصحيحة: ${correctAnswer}`;
+                    questions[index].appendChild(correctAnswerDiv);
+                }
+            });
+
+            const result = document.getElementById('result');
+            result.textContent = `درجتك: ${score}`;
+            document.getElementById('result-button').style.display = 'none';
+
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+    </script>
+</head>
+<body>
+    <div class="choices">
+        <div class="choice" onclick="fillBlank('bite', this)">bite</div>
+        <div class="choice" onclick="fillBlank('produce', this)">produce</div>
+        <div class="choice" onclick="fillBlank('falcon', this)">falcon</div>
+        <div class="choice" onclick="fillBlank('crops', this)">crops</div>
+        <div class="choice" onclick="fillBlank('fly', this)">fly</div>
+    </div>
+    <div class="question-container">
+        1. If you put your foot on a snake, it will <span class="blank"></span> you.
+    </div>
+    <div class="question-container">
+        2. Cows and goats <span class="blank"></span> milk.
+    </div>
+    <div class="question-container">
+        3. The fastest bird in the world <span class="blank"></span>.
+    </div>
+    <div class="question-container">
+        4. Rice and wheat, for example  <span class="blank"></span>.
+    </div>
+    <div class="question-container">
+        5. A bat is not a bird, but it can <span class="blank"></span> like a bird.
+    </div>
+    <button id="result-button" class="result-button" onclick="showResult()">عرض النتيجة</button>
+    <div id="result" class="result"></div>
+    <div class="footer">
+        إعداد الأستاذ: علي حسين
+    </div>
+</body>
+</html>
